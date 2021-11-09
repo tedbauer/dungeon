@@ -1,4 +1,5 @@
 extern crate sdl2;
+extern crate engine;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -7,7 +8,6 @@ use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use std::time::Duration;
 
-mod component;
 mod components;
 mod map;
 mod map_builder;
@@ -17,6 +17,8 @@ mod util;
 use map::Map;
 use map_builder::MapBuilder;
 use player::Player;
+
+use engine::component;
 
 struct State {
     ecs: component::World,

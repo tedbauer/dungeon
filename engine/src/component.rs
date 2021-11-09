@@ -39,13 +39,16 @@ impl World {
     }
 
     pub fn query(&self, query: ComponentQuery) -> Vec<&Vec<Box<dyn Component>>> {
-        self.entities.iter().filter(|entity| {
-            entity.iter().any(|comp| {
-                query
-                    .comps
-                    .iter()
-                    .any(|query_comp| query_comp.type_id() == comp.type_id())
+        self.entities
+            .iter()
+            .filter(|entity| {
+                entity.iter().any(|comp| {
+                    query
+                        .comps
+                        .iter()
+                        .any(|query_comp| query_comp.type_id() == comp.type_id())
+                })
             })
-        }).collect()
+            .collect()
     }
 }

@@ -27,9 +27,14 @@ name = "dungeon"
 version = "0.1.0"
 dependencies = [
  "component_derive",
+ "engine",
  "rand",
  "sdl2",
 ]
+
+[[package]]
+name = "engine"
+version = "0.1.0"
 
 [[package]]
 name = "getrandom"

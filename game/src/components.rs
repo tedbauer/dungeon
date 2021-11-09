@@ -1,48 +1,17 @@
-use crate::component::Component;
+extern crate engine;
+
 use crate::util::Point;
 use std::any::Any;
+use engine::component::Component;
+use component_derive::Component;
 
-#[proc_macro_derive(Component)]
+#[derive(Component)]
 pub struct Position {
     pub pos: Point,
 }
 
-impl Component for Position {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
+#[derive(Component)]
 pub struct Player {}
 
-impl Component for Player {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
+#[derive(Component)]
 pub struct Render {}
-
-impl Component for Render {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-/*
-macro_rules! register_components {
-    ( $( $c:stmt )*  ) => {
-
-        enum
-
-    };
-}
-
-register_components! {
-    pub struct Position {
-        pub pos: Point,
-    }
-
-    pub struct Render {}
-}
-*/
