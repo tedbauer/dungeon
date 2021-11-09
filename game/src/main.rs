@@ -7,23 +7,28 @@ use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use std::time::Duration;
 
+mod component;
+mod components;
 mod map;
+mod map_builder;
 mod player;
+mod util;
+
 use map::Map;
+use map_builder::MapBuilder;
 use player::Player;
 
-// TODO:
-// Frame rate throttling
-
 struct State {
-    map: Map,
+    ecs: component::World,
+    pub map: Map,
     player: Player,
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(map: Map) -> Self {
         Self {
-            map: Map::new(),
+            ecs: component::World::new(),
+            map,
             player: Player::new((0, 0)),
         }
     }
@@ -58,7 +63,17 @@ pub fn main() {
 
     canvas.set_draw_color(black);
 
-    let mut state = State::new();
+    let mut map_builder = MapBuilder::new(Map::new(), (0, 0));
+    let mut state = State::new(map_builder.build());
+
+    let mut world = component::World::new();
+    world.add_entity(vec![
+        Box::new(components::Player {}),
+        Box::new(components::Position {
+            pos: util::Point { x: 0, y: 0 },
+        }),
+        Box::new(components::Render {}),
+    ]);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {

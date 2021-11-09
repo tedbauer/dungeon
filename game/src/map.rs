@@ -7,12 +7,13 @@ const WIDTH_TILES: usize = 20;
 const HEIGHT_TILES: usize = 30;
 const NUM_TILES: usize = WIDTH_TILES * HEIGHT_TILES;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TileType {
     Wall,
     Floor,
 }
 
+#[derive(Debug, Clone)]
 pub struct Map {
     pub tiles: Vec<TileType>,
 }
@@ -26,6 +27,12 @@ impl Map {
 
     pub fn get_tile(&self, x: i32, y: i32) -> Option<&TileType> {
         self.tiles.get((y * (WIDTH_TILES as i32) + x) as usize)
+    }
+
+    pub fn set_tile(&mut self, x: i32, y: i32, tile: TileType) {
+        if let Some(t) = self.tiles.get_mut((y * (WIDTH_TILES as i32) + x) as usize) {
+            *t = tile;
+        }
     }
 
     pub fn in_bounds(&self, x: i32, y: i32) -> bool {
@@ -50,21 +57,11 @@ impl Map {
                 {
                     TileType::Floor => {
                         canvas.set_draw_color(black);
-                        canvas.fill_rect(Rect::new(
-                            x.try_into().unwrap(),
-                            y.try_into().unwrap(),
-                            50,
-                            50,
-                        ));
+                        canvas.fill_rect(Rect::new((x * 50) as i32, (y * 50) as i32, 50, 50));
                     }
                     TileType::Wall => {
                         canvas.set_draw_color(grey);
-                        canvas.fill_rect(Rect::new(
-                            x.try_into().unwrap(),
-                            y.try_into().unwrap(),
-                            50,
-                            50,
-                        ));
+                        canvas.fill_rect(Rect::new((x * 50) as i32, (y * 50) as i32, 50, 50));
                     }
                 }
             }
