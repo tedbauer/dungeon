@@ -8,8 +8,8 @@ fn impl_component_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let gen = quote! {
         impl Component for #name {
-            fn as_any(&self) -> &dyn Any {
-                self
+            fn type_id(&self) -> String {
+                todo!()
             }
         }
     };

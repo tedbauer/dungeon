@@ -1,54 +1,40 @@
-use std::any::Any;
+trait ComponentTuple {}
 
 pub trait Component {
-    fn as_any(&self) -> &dyn Any;
+    fn type_id(&self) -> String; 
 }
 
-pub struct ComponentQuery {
-    comps: Vec<Box<dyn Component>>,
-    remove: Vec<Box<dyn Component>>,
+macro_rules! component_tuple_impls {
+    ( $head:ident, $( $tail:ident, )* ) => {
+        impl<$head, $( $tail ),*> ComponentTuple for ($head, $( $tail ),*)
+        where
+            $head: Component,
+            $( $tail: Component ),*
+        {}
+
+        component_tuple_impls!($( $tail, )*);
+    };
+
+    () => {};
 }
 
-impl ComponentQuery {
-    pub fn new(comps: Vec<Box<dyn Component>>) -> Self {
-        Self {
-            comps,
-            remove: vec![],
-        }
-    }
+component_tuple_impls!(A, B, C, D, E, F, G, H, I, J,);
 
-    pub fn filter(self, remove: Vec<Box<dyn Component>>) -> Self {
-        Self {
-            comps: self.comps,
-            remove,
-        }
-    }
+struct View<C: ComponentTuple> {
+    components: Option<C>
 }
 
-pub struct World {
-    entities: Vec<Vec<Box<dyn Component>>>,
+impl<C: ComponentTuple> Iterator for View<C> {
+    type Item = C;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+
 }
 
-impl World {
-    pub fn new() -> Self {
-        Self { entities: vec![] }
-    }
-
-    pub fn add_entity(&mut self, entity: Vec<Box<dyn Component>>) {
-        self.entities.push(entity);
-    }
-
-    pub fn query(&self, query: ComponentQuery) -> Vec<&Vec<Box<dyn Component>>> {
-        self.entities
-            .iter()
-            .filter(|entity| {
-                entity.iter().any(|comp| {
-                    query
-                        .comps
-                        .iter()
-                        .any(|query_comp| query_comp.type_id() == comp.type_id())
-                })
-            })
-            .collect()
+fn main() {
+    for (position, _) in (View::<(Position, Player)>::create() { components: None }) {
+        println!("{:?}", position);
     }
 }
