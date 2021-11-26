@@ -13,6 +13,7 @@ use components::*;
 use engine::component;
 use engine::world::View;
 use engine::world::World;
+use crate::component::Component;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -35,28 +36,28 @@ pub fn main() {
     canvas.set_draw_color(black);
 
     let world = World::new();
-    world.add_entity(&(components::Player {}, components::Position { x: 5, y: 9 }));
-    world.add_entity(&(components::Enemy {}, components::Position { x: 11, y: 11 }));
-    world.add_entity(&(components::Enemy {}, components::Position { x: 14, y: 14 }));
-    world.add_entity(&(components::Enemy {}, components::Position { x: 15, y: 15 }));
-    world.add_entity(&(components::Enemy {}, components::Position { x: 2, y: 6 }));
-    world.add_entity(&(components::Enemy {}, components::Position { x: 3, y: 1 }));
-    world.add_entity(&(
-        components::Enemy {},
-        components::Position { x: 123, y: 124 },
-    ));
-    world.add_entity(&(
-        components::Enemy {},
-        components::Position { x: 200, y: 400 },
-    ));
-    world.add_entity(&(
-        components::Enemy {},
-        components::Position { x: 321, y: 541 },
-    ));
-    world.add_entity(&(
-        components::Enemy {},
-        components::Position { x: 213, y: 123 },
-    ));
+    world.add_entity(vec![Box::new(components::Player {}), Box::new(components::Position { x: 5, y: 9 })]);
+    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 11, y: 11 })]);
+    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 14, y: 14 })]);
+    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 15, y: 15 })]);
+    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 2, y: 6 })]);
+    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 3, y: 1 })]);
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 123, y: 124 }),
+    ]);
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 200, y: 400 }),
+    ]);
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 321, y: 541 }),
+    ]);
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 213, y: 123 }),
+    ]);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
