@@ -1,17 +1,20 @@
 extern crate engine;
 
-use crate::util::Point;
-use std::any::Any;
-use engine::component::Component;
 use component_derive::Component;
+use engine::component::Component;
+use std::any::Any;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Position {
-    pub pos: Point,
+    pub x: usize,
+    pub y: usize,
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Player {}
 
-#[derive(Component)]
+#[derive(Component, Debug)]
+pub struct Enemy {}
+
+#[derive(Component, Debug)]
 pub struct Render {}

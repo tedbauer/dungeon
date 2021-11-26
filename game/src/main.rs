@@ -1,5 +1,5 @@
-extern crate sdl2;
 extern crate engine;
+extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -9,41 +9,10 @@ use sdl2::render::Canvas;
 use std::time::Duration;
 
 mod components;
-mod map;
-mod map_builder;
-mod player;
-mod util;
-
-use map::Map;
-use map_builder::MapBuilder;
-use player::Player;
-
+use components::*;
 use engine::component;
-
-struct State {
-    ecs: component::World,
-    pub map: Map,
-    player: Player,
-}
-
-impl State {
-    pub fn new(map: Map) -> Self {
-        Self {
-            ecs: component::World::new(),
-            map,
-            player: Player::new((0, 0)),
-        }
-    }
-
-    pub fn render(&self, canvas: &mut Canvas<sdl2::video::Window>) {
-        self.map.render(canvas);
-        self.player.render(canvas);
-    }
-
-    pub fn update(&mut self, event: &Event) {
-        self.player.update(event, &self.map)
-    }
-}
+use engine::world::View;
+use engine::world::World;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -65,27 +34,37 @@ pub fn main() {
 
     canvas.set_draw_color(black);
 
-    let mut map_builder = MapBuilder::new(Map::new(), (0, 0));
-    let mut state = State::new(map_builder.build());
-
-    let mut world = component::World::new();
-    world.add_entity(vec![
-        Box::new(components::Player {}),
-        Box::new(components::Position {
-            pos: util::Point { x: 0, y: 0 },
-        }),
-        Box::new(components::Render {}),
-    ]);
+    let world = World::new();
+    world.add_entity(&(components::Player {}, components::Position { x: 5, y: 9 }));
+    world.add_entity(&(components::Enemy {}, components::Position { x: 11, y: 11 }));
+    world.add_entity(&(components::Enemy {}, components::Position { x: 14, y: 14 }));
+    world.add_entity(&(components::Enemy {}, components::Position { x: 15, y: 15 }));
+    world.add_entity(&(components::Enemy {}, components::Position { x: 2, y: 6 }));
+    world.add_entity(&(components::Enemy {}, components::Position { x: 3, y: 1 }));
+    world.add_entity(&(
+        components::Enemy {},
+        components::Position { x: 123, y: 124 },
+    ));
+    world.add_entity(&(
+        components::Enemy {},
+        components::Position { x: 200, y: 400 },
+    ));
+    world.add_entity(&(
+        components::Enemy {},
+        components::Position { x: 321, y: 541 },
+    ));
+    world.add_entity(&(
+        components::Enemy {},
+        components::Position { x: 213, y: 123 },
+    ));
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         canvas.set_draw_color(black);
         canvas.clear();
-        state.render(&mut canvas);
         canvas.present();
 
         for event in event_pump.poll_iter() {
-            state.update(&event);
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
@@ -95,7 +74,10 @@ pub fn main() {
                 _ => {}
             }
         }
-        // The rest of the game loop goes here...
+
+        for (_, position) in View::<(Player, Position)>::new(&world) {
+            println!("player pos: {:?}", position);
+        }
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
