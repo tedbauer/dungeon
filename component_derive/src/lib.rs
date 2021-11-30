@@ -2,14 +2,15 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
+use std::any::TypeId;
 use syn;
 
 fn impl_component_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let gen = quote! {
         impl Component for #name {
-            fn type_id(&self) -> String {
-                todo!()
+            fn type_id(&self) -> TypeId {
+                TypeId::of::<Self>()
             }
         }
     };

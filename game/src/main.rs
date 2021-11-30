@@ -9,11 +9,11 @@ use sdl2::render::Canvas;
 use std::time::Duration;
 
 mod components;
+use crate::component::Component;
 use components::*;
 use engine::component;
 use engine::world::View;
 use engine::world::World;
-use crate::component::Component;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -35,8 +35,23 @@ pub fn main() {
 
     canvas.set_draw_color(black);
 
-    let world = World::new();
-    world.add_entity(vec![Box::new(components::Player {}), Box::new(components::Position { x: 5, y: 9 })]);
+    let mut world = World::new();
+    world.add_entity(vec![
+        Box::new(components::Player {}),
+        Box::new(components::Position { x: 5, y: 9 }),
+    ]);
+
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 10, y: 20 }),
+    ]);
+
+    world.add_entity(vec![
+        Box::new(components::Enemy {}),
+        Box::new(components::Position { x: 500, y: 1230 }),
+    ]);
+    
+    /*
     world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 11, y: 11 })]);
     world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 14, y: 14 })]);
     world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 15, y: 15 })]);
@@ -58,6 +73,7 @@ pub fn main() {
         Box::new(components::Enemy {}),
         Box::new(components::Position { x: 213, y: 123 }),
     ]);
+    */
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
@@ -76,9 +92,10 @@ pub fn main() {
             }
         }
 
-        for (_, position) in View::<(Player, Position)>::new(&world) {
-            println!("player pos: {:?}", position);
-        }
+        //for (_, position, _) in View::<(Player, Position, Render)>::new(&world) {
+        //    println!("player pos: {:?}", position);
+        //}
+        println!("world state: {:?}", world);
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }

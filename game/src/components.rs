@@ -3,6 +3,7 @@ extern crate engine;
 use component_derive::Component;
 use engine::component::Component;
 use std::any::Any;
+use std::any::TypeId;
 
 #[derive(Component, Debug)]
 pub struct Position {

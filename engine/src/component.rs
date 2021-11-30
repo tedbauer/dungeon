@@ -1,7 +1,12 @@
-pub trait ComponentTuple {}
+use std::any::TypeId;
+use std::fmt::Debug;
 
-pub trait Component {
-    fn type_id(&self) -> String;
+pub trait ComponentTuple {
+    fn blah() -> Vec<TypeId>;
+}
+
+pub trait Component: 'static + Debug {
+    fn type_id(&self) -> TypeId;
 }
 
 macro_rules! component_tuple_impls {
@@ -10,7 +15,12 @@ macro_rules! component_tuple_impls {
         where
             $head: Component,
             $( $tail: Component ),*
-        {}
+        {
+
+            fn blah() -> Vec<TypeId> {
+                vec![ TypeId::of::<$head>(), $( TypeId::of::<$tail>() ),* ]
+            }
+        }
 
         component_tuple_impls!($( $tail, )*);
     };
