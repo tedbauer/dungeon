@@ -2,7 +2,8 @@ use std::any::TypeId;
 use std::fmt::Debug;
 
 pub trait ComponentTuple {
-    fn blah() -> Vec<TypeId>;
+    fn new(components: &[Box<dyn Component>]) -> Self;
+    fn type_ids() -> Vec<TypeId>;
 }
 
 pub trait Component: 'static + Debug {
@@ -17,7 +18,11 @@ macro_rules! component_tuple_impls {
             $( $tail: Component ),*
         {
 
-            fn blah() -> Vec<TypeId> {
+            fn new(components: &[Box<dyn Component>]) -> Self {
+                todo!()
+            }
+
+            fn type_ids() -> Vec<TypeId> {
                 vec![ TypeId::of::<$head>(), $( TypeId::of::<$tail>() ),* ]
             }
         }

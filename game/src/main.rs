@@ -50,7 +50,7 @@ pub fn main() {
         Box::new(components::Enemy {}),
         Box::new(components::Position { x: 500, y: 1230 }),
     ]);
-    
+
     /*
     world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 11, y: 11 })]);
     world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 14, y: 14 })]);
@@ -92,10 +92,9 @@ pub fn main() {
             }
         }
 
-        //for (_, position, _) in View::<(Player, Position, Render)>::new(&world) {
-        //    println!("player pos: {:?}", position);
+        //for (_, position) in View::<(Player, Position)>::new(&world) {
+            //println!("player pos: {:?}", position);
         //}
-        println!("world state: {:?}", world);
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
