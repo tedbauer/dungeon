@@ -12,6 +12,7 @@ mod components;
 use crate::component::Component;
 use components::*;
 use engine::component;
+use engine::world::EntityID;
 use engine::world::View;
 use engine::world::World;
 
@@ -51,29 +52,7 @@ pub fn main() {
         Box::new(components::Position { x: 500, y: 1230 }),
     ]);
 
-    /*
-    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 11, y: 11 })]);
-    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 14, y: 14 })]);
-    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 15, y: 15 })]);
-    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 2, y: 6 })]);
-    world.add_entity(vec![Box::new(components::Enemy {}), Box::new(components::Position { x: 3, y: 1 })]);
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 123, y: 124 }),
-    ]);
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 200, y: 400 }),
-    ]);
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 321, y: 541 }),
-    ]);
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 213, y: 123 }),
-    ]);
-    */
+    println!("{:?}", world);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
@@ -92,9 +71,14 @@ pub fn main() {
             }
         }
 
-        //for (_, position) in View::<(Player, Position)>::new(&world) {
-            //println!("player pos: {:?}", position);
-        //}
+        for entity in View::<(Player, Position)>::new(&mut world).collect::<Vec<EntityID>>() {
+            let player: Player = world.get_component::<Player>(entity).clone();
+
+            let pos: &mut Position = world.get_component_mut::<Position>(entity);
+            pos.x += 1;
+            println!("player pos: {:?}", pos);
+            println!("player pos: {:?}", player);
+        }
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }

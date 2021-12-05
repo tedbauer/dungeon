@@ -11,7 +11,7 @@ pub struct Position {
     pub y: usize,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone)]
 pub struct Player {}
 
 #[derive(Component, Debug)]

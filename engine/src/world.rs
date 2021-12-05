@@ -5,7 +5,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
-type ComponentID = usize;
+pub type ComponentID = usize;
+pub type EntityID = usize;
 
 #[derive(Debug)]
 pub struct World {
@@ -25,20 +26,47 @@ impl World {
         }
     }
 
+    //pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &Box<dyn Component> {
+    pub fn get_component_mut<C: Component>(&mut self, entity_id: EntityID) -> &mut C {
+        let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
+        self.component_pools
+            .get_mut(*component_id)
+            .unwrap()
+            .get_mut(entity_id)
+            .unwrap()
+            .as_any_mut()
+            .downcast_mut::<C>()
+            .unwrap()
+    }
+
+    //pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &Box<dyn Component> {
+    pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &C {
+        let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
+        self.component_pools
+            .get(*component_id)
+            .unwrap()
+            .get(entity_id)
+            .unwrap()
+            .as_any()
+            .downcast_ref::<C>()
+            .unwrap()
+    }
+
     pub fn add_entity(&mut self, components: Vec<Box<dyn Component>>) {
         let mut entity_component_ids = HashSet::new();
         for component in components {
+            let component_id = &component.type_id();
             if self.component_ids.contains_key(&component.type_id()) {
                 self.component_pools
-                    .get_mut(*self.component_ids.get(&component.type_id()).unwrap())
+                    .get_mut(*self.component_ids.get(component_id).unwrap())
                     .unwrap()
                     .push(component);
-                //entity_component_ids.insert(*self.component_ids.get(&component.type_id()).unwrap());
+                entity_component_ids.insert(*self.component_ids.get(component_id).unwrap());
             } else {
                 self.component_ids
-                    .insert(component.type_id(), self.component_id_cap);
+                    .insert(*component_id, self.component_id_cap);
                 self.component_id_cap += 1;
-                //entity_component_ids.insert(*self.component_ids.get(&component.type_id()).unwrap());
+                entity_component_ids.insert(*self.component_ids.get(component_id).unwrap());
                 self.component_pools.push(vec![component]);
             }
         }
@@ -62,7 +90,7 @@ pub struct View<'a, C: ComponentTuple> {
 }
 
 impl<'a, C: ComponentTuple> Iterator for View<'a, C> {
-    type Item = C;
+    type Item = EntityID;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut done = false;
@@ -82,9 +110,12 @@ impl<'a, C: ComponentTuple> Iterator for View<'a, C> {
                 }
             }
             if ent_match {
+                let ent = self.entity_index;
                 self.entity_index += 1;
-                return Some(C::new(&vec![]));
+                return Some(ent);
             }
+
+            self.entity_index += 1;
 
             if self.entity_index == self.world.entity_components.len() {
                 done = true;

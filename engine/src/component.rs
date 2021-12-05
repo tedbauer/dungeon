@@ -1,13 +1,14 @@
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::fmt::Debug;
 
 pub trait ComponentTuple {
-    fn new(components: &[Box<dyn Component>]) -> Self;
     fn type_ids() -> Vec<TypeId>;
 }
 
 pub trait Component: 'static + Debug {
     fn type_id(&self) -> TypeId;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+    fn as_any(&self) -> &dyn Any;
 }
 
 macro_rules! component_tuple_impls {
@@ -17,10 +18,6 @@ macro_rules! component_tuple_impls {
             $head: Component,
             $( $tail: Component ),*
         {
-
-            fn new(components: &[Box<dyn Component>]) -> Self {
-                todo!()
-            }
 
             fn type_ids() -> Vec<TypeId> {
                 vec![ TypeId::of::<$head>(), $( TypeId::of::<$tail>() ),* ]
