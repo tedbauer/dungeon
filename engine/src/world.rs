@@ -1,78 +1,193 @@
 use crate::component::Component;
 use crate::component::ComponentTuple;
+use std::any::Any;
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
-pub type ComponentID = usize;
-pub type EntityID = usize;
+pub type ComponentId = usize;
+pub type EntityId = usize;
 
 #[derive(Debug)]
+struct Pool<C: Component> {
+    pool: Vec<Option<C>>,
+    size: usize,
+}
+
+impl<C: Component> Pool<C> {
+    fn new() -> Self {
+        let mut pool = Vec::<Option<C>>::new();
+        pool.resize_with(50, || None);
+
+        Self { pool, size: 50 }
+    }
+
+    fn add_component(&mut self, entityId: EntityId, component: C) {
+        if entityId < self.size {
+            *self.pool.get_mut(entityId).unwrap() = Some(component);
+        } else {
+            self.size = self.size * 2;
+            self.pool.resize_with(self.size, || None);
+        }
+
+        println!("{:?}", self.pool);
+    }
+
+    // TODO: create custom type instead of `Option` and get rid of `unwrap()`s.
+    fn get_component(&self, entityId: EntityId) -> Option<&C> {
+        self.pool.get(entityId).unwrap().as_ref()
+    }
+
+    fn get_component_mut(&mut self, entityId: EntityId) -> Option<&mut C> {
+        self.pool.get_mut(entityId).unwrap().as_mut()
+    }
+}
+
+trait ComponentPool {
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+impl<T> ComponentPool for Pool<T>
+where
+    T: Component,
+{
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 pub struct World {
-    component_pools: Vec<Vec<Box<dyn Component>>>,
-    component_ids: HashMap<TypeId, ComponentID>,
-    component_id_cap: ComponentID,
-    entity_components: Vec<HashSet<ComponentID>>,
+    pools: Vec<Box<dyn ComponentPool>>,
+    component_ids: HashMap<TypeId, ComponentId>,
+    component_id_head: ComponentId,
+    entity_id_head: EntityId,
+    entity_components: HashMap<EntityId, HashSet<ComponentId>>,
 }
 
 impl World {
     pub fn new() -> Self {
         Self {
-            component_pools: vec![],
+            pools: vec![],
             component_ids: HashMap::new(),
-            component_id_cap: 0,
-            entity_components: vec![],
+            component_id_head: 0,
+            entity_id_head: 0,
+            entity_components: HashMap::new(),
         }
     }
 
-    //pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &Box<dyn Component> {
-    pub fn get_component_mut<C: Component>(&mut self, entity_id: EntityID) -> &mut C {
+    pub fn create_pool<C: 'static + Component>(&mut self) {
+        let p = Pool::<C>::new();
+        self.pools.push(Box::new(p));
+
+        self.component_ids
+            .insert(TypeId::of::<C>(), self.component_id_head);
+        self.component_id_head += 1;
+    }
+
+    pub fn create_entity(&mut self) -> EntityId {
+        let new_entity = self.entity_id_head;
+        self.entity_id_head += 1;
+        new_entity
+    }
+
+    pub fn get_component<C: Component>(&mut self, entity: EntityId) -> Option<&C> {
         let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
-        self.component_pools
+        let pool = self
+            .pools
             .get_mut(*component_id)
             .unwrap()
-            .get_mut(entity_id)
+            .as_any_mut()
+            .downcast_mut::<Pool<C>>()
+            .unwrap();
+        pool.get_component(entity)
+    }
+
+    pub fn get_component_mut<C: Component>(&mut self, entity: EntityId) -> Option<&mut C> {
+        let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
+        let pool = self
+            .pools
+            .get_mut(*component_id)
             .unwrap()
             .as_any_mut()
-            .downcast_mut::<C>()
-            .unwrap()
+            .downcast_mut::<Pool<C>>()
+            .unwrap();
+        pool.get_component_mut(entity)
     }
 
-    //pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &Box<dyn Component> {
-    pub fn get_component<C: Component>(&self, entity_id: EntityID) -> &C {
+    pub fn assign<C: Component>(&mut self, entity: EntityId, component: C) {
         let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
-        self.component_pools
-            .get(*component_id)
+        let mut pool = self
+            .pools
+            .get_mut(*component_id)
             .unwrap()
-            .get(entity_id)
-            .unwrap()
-            .as_any()
-            .downcast_ref::<C>()
-            .unwrap()
-    }
+            .as_any_mut()
+            .downcast_mut::<Pool<C>>()
+            .unwrap();
+        pool.add_component(entity, component);
 
-    pub fn add_entity(&mut self, components: Vec<Box<dyn Component>>) {
-        let mut entity_component_ids = HashSet::new();
-        for component in components {
-            let component_id = &component.type_id();
-            if self.component_ids.contains_key(&component.type_id()) {
-                self.component_pools
-                    .get_mut(*self.component_ids.get(component_id).unwrap())
-                    .unwrap()
-                    .push(component);
-                entity_component_ids.insert(*self.component_ids.get(component_id).unwrap());
-            } else {
-                self.component_ids
-                    .insert(*component_id, self.component_id_cap);
-                self.component_id_cap += 1;
-                entity_component_ids.insert(*self.component_ids.get(component_id).unwrap());
-                self.component_pools.push(vec![component]);
-            }
+        if self.entity_components.contains_key(&entity) {
+            self.entity_components
+                .get_mut(&entity)
+                .unwrap()
+                .insert(*self.component_ids.get(&TypeId::of::<C>()).unwrap());
+        } else {
+            let mut new_set = HashSet::new();
+            new_set.insert(*self.component_ids.get(&TypeId::of::<C>()).unwrap());
+            self.entity_components.insert(entity, new_set);
         }
-        self.entity_components.push(entity_component_ids);
     }
 }
+
+/*
+fn test() {
+
+    let player_entity = world.create_entity();
+    let text = Text {
+        t: "hello".to_string(),
+        color: "Brown".to_string(),
+    };
+
+    world.add_component(player_entity, Position { x: 5, y: 4 });
+    world.add_component(player_entity, Player {});
+    world.add_component(player_entity, text);
+
+    world.add_entity()
+        .with_component(Position { x: 5, y: 4 })
+        .with_component(Player {})
+        .create();
+
+    let entity_1 = world.add_entity()
+        .with_component(Position { x: 5, y: 4 })
+        .with_component(Text { text: "hello".to_string() })
+        .with_component(Enemy {})
+        .create();
+
+}
+
+struct EntityBuilder {
+    id: u32,
+}
+
+impl EntityBuilder {
+    pub fn new(world: World) -> Self {
+    }
+
+    pub fn with_component(C: impl Component) -> Self {
+
+    }
+
+    pub fn build() -> EntityID {
+
+    }
+
+}
+*/
 
 /// An iterator containing every entity in the `World` that has the components in `C`.
 ///
@@ -90,18 +205,20 @@ pub struct View<'a, C: ComponentTuple> {
 }
 
 impl<'a, C: ComponentTuple> Iterator for View<'a, C> {
-    type Item = EntityID;
+    type Item = EntityId;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut done = false;
 
-        while !done {
+        loop {
+            if self.entity_index == self.world.entity_components.len() {
+                break;
+            }
             let mut ent_match = true;
             for type_id in C::type_ids() {
                 if !self
                     .world
                     .entity_components
-                    .get(self.entity_index)
+                    .get(&self.entity_index)
                     .unwrap()
                     .contains(self.world.component_ids.get(&type_id).unwrap())
                 {
@@ -116,10 +233,6 @@ impl<'a, C: ComponentTuple> Iterator for View<'a, C> {
             }
 
             self.entity_index += 1;
-
-            if self.entity_index == self.world.entity_components.len() {
-                done = true;
-            }
         }
         None
     }
