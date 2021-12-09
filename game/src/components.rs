@@ -1,3 +1,5 @@
+use sdl2::pixels::Color;
+
 extern crate engine;
 
 use component_derive::Component;
@@ -7,8 +9,15 @@ use std::any::TypeId;
 
 #[derive(Component, Debug)]
 pub struct Position {
-    pub x: usize,
-    pub y: usize,
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Position {
+    pub fn add(&mut self, other: &Position) {
+        self.x += other.x;
+        self.y += other.y;
+    }
 }
 
 #[derive(Component, Debug, Clone)]
@@ -18,4 +27,6 @@ pub struct Player {}
 pub struct Enemy {}
 
 #[derive(Component, Debug)]
-pub struct Render {}
+pub struct Render {
+    pub color: Color,
+}

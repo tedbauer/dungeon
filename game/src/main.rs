@@ -6,10 +6,15 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
+use sdl2::video::Window;
 use std::time::Duration;
 
 mod components;
+mod systems;
+
 use crate::component::Component;
+use crate::systems::entity_render::entity_render;
+use crate::systems::player_input::process_player_input;
 use components::*;
 use engine::component;
 use engine::world::EntityId;
@@ -26,7 +31,7 @@ pub fn main() {
         .build()
         .unwrap();
 
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas: Canvas<Window> = window.into_canvas().build().unwrap();
 
     let width = 400;
     let height = 400;
@@ -40,74 +45,60 @@ pub fn main() {
     world.create_pool::<Player>();
     world.create_pool::<Enemy>();
     world.create_pool::<Position>();
+    world.create_pool::<Render>();
 
     let player = world.create_entity();
     world.assign(player, Position { x: 5, y: 9 });
     world.assign(player, Player {});
+    world.assign(
+        player,
+        Render {
+            color: Color::RGB(255, 255, 255),
+        },
+    );
 
     let enemy1 = world.create_entity();
     world.assign(enemy1, Position { x: 100, y: 200 });
     world.assign(enemy1, Enemy {});
+    world.assign(
+        enemy1,
+        Render {
+            color: Color::RGB(255, 0, 0),
+        },
+    );
 
     let enemy2 = world.create_entity();
     world.assign(enemy2, Position { x: 50, y: 40 });
     world.assign(enemy2, Enemy {});
-
-    /*
-    let mut world = World::new();
-    world.add_entity(vec![
-        Box::new(components::Player {}),
-        Box::new(components::Position { x: 5, y: 9 }),
-    ]);
-
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 10, y: 20 }),
-    ]);
-
-    world.add_entity(vec![
-        Box::new(components::Enemy {}),
-        Box::new(components::Position { x: 500, y: 1230 }),
-    ]);
-        */
-
-    //println!("{:?}", world);
+    world.assign(
+        enemy1,
+        Render {
+            color: Color::RGB(255, 0, 0),
+        },
+    );
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         canvas.set_draw_color(black);
         canvas.clear();
-        canvas.present();
 
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. }
+                | Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
-                _ => {}
+                | Event::KeyDown {
+                    keycode: Some(key), ..
+                } => process_player_input(&mut world, key),
+                | _ => {}
             }
         }
 
-        for entity in View::<(Player, Position)>::new(&mut world).collect::<Vec<EntityId>>() {
-            let player: &Player = world.get_component::<Player>(entity).unwrap();
-            println!("player: {:?}", player);
-
-            let pos: &mut Position = world.get_component_mut::<Position>(entity).unwrap();
-            println!("player pos: {:?}", pos);
-            pos.x += 1;
-        }
-
-        for entity in View::<(Enemy, Position)>::new(&mut world).collect::<Vec<EntityId>>() {
-            let enemy: &Enemy = world.get_component::<Enemy>(entity).clone().unwrap();
-            println!("enemy: {:?}", enemy);
-
-            let pos: &mut Position = world.get_component_mut::<Position>(entity).unwrap();
-            println!("enemy pos: {:?}", pos);
-            pos.x += 1;
-        }
-
+        entity_render(&world, &mut canvas);
+        canvas.present();
+				
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
