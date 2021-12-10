@@ -25,7 +25,7 @@ impl<C: Component> Pool<C> {
             self.pool.resize_with(self.size, || None);
         }
 
-        println!("{:?}", self.pool);
+        //println!("{:?}", self.pool);
     }
 
     // TODO: create custom type instead of `Option` and get rid of `unwrap()`s.
