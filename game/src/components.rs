@@ -33,7 +33,10 @@ pub struct Render {
     pub color: Color,
 }
 
-#[derive(Component)]
-pub struct RenderImage {
-	pub texture: PathBuf,
+#[derive(Component, Debug)]
+pub struct ImageRender {
+    pub texture: PathBuf,
+    pub height: u32,
+    pub width: u32,
+    pub y_offset: i32,
 }

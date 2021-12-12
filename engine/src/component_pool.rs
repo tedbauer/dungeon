@@ -3,7 +3,6 @@ use crate::world::EntityId;
 
 use std::any::Any;
 
-#[derive(Debug)]
 pub struct Pool<C: Component> {
     pool: Vec<Option<C>>,
     size: usize,
@@ -24,8 +23,6 @@ impl<C: Component> Pool<C> {
             self.size = self.size * 2;
             self.pool.resize_with(self.size, || None);
         }
-
-        //println!("{:?}", self.pool);
     }
 
     // TODO: create custom type instead of `Option` and get rid of `unwrap()`s.

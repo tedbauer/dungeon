@@ -5,7 +5,7 @@ pub trait ComponentTuple {
     fn type_ids() -> Vec<TypeId>;
 }
 
-pub trait Component: 'static {
+pub trait Component: 'static + Debug {
     fn type_id(&self) -> TypeId;
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn as_any(&self) -> &dyn Any;
