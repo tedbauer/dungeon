@@ -33,10 +33,9 @@ pub fn entity_render(world: &World, canvas: &mut Canvas<Window>) {
             world.get_component::<Position>(*e2),
         ) {
             | (Some(p1), Some(p2)) => {
-							if p1.x == p2.x && p1.y == p2.y {
+                if p1.x == p2.x && p1.y == p2.y {
                     Ordering::Equal
-							}
-                else if p1.x >= p2.x && p1.y >= p2.y {
+                } else if p1.x >= p2.x && p1.y >= p2.y {
                     Ordering::Greater
                 } else {
                     Ordering::Less
@@ -70,5 +69,4 @@ pub fn entity_render(world: &World, canvas: &mut Canvas<Window>) {
         //let position: &Position = world.get_component::<Position>(entity).unwrap();
         //let render: &ImageRender = world.get_component::<ImageRender>(entity).unwrap();
     }
-
 }
