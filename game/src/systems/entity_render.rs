@@ -1,29 +1,25 @@
 use crate::sdl2::image::LoadTexture;
 use crate::ImageRender;
-use crate::Player;
 use crate::Position;
 use crate::Render;
+use engine::view::view::Screen;
 use engine::world::EntityId;
 use engine::world::View;
 use engine::world::World;
-use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
 use std::cmp::Ordering;
-use std::path::PathBuf;
 
 fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
     ((x - y) * (40 / 2) + 400, (x + y) * (20 / 2))
 }
 
-pub fn entity_render(world: &World, canvas: &mut Canvas<Window>) {
+pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
     for entity in View::<(Position, Render)>::new(world) {
         let position: &Position = world.get_component::<Position>(entity).unwrap();
         let render: &Render = world.get_component::<Render>(entity).unwrap();
 
-        canvas.set_draw_color(render.color);
-        canvas.draw_rect(Rect::new(position.x, position.y, 50, 50));
+        screen.set_draw_color(&render.color);
+        screen.draw_rect(Rect::new(position.x, position.y, 50, 50));
     }
 
     let mut image_entities = View::<(Position, ImageRender)>::new(world).collect::<Vec<EntityId>>();
@@ -46,7 +42,7 @@ pub fn entity_render(world: &World, canvas: &mut Canvas<Window>) {
         }
     });
 
-    let texture_creator = canvas.texture_creator();
+    let texture_creator = screen.texture_creator();
     for entity in image_entities.iter() {
         match (
             world.get_component::<Position>(*entity),
@@ -58,10 +54,15 @@ pub fn entity_render(world: &World, canvas: &mut Canvas<Window>) {
                     .unwrap();
 
                 let (x, y) = tile_to_world(position.x, position.y);
-                canvas.copy(
+                screen.copy(
                     &tex,
                     None,
-                    Rect::new(x, y + render.y_offset, render.width, render.height),
+                    Some(Rect::new(
+                        x,
+                        y + render.y_offset,
+                        render.width,
+                        render.height,
+                    )),
                 );
             }
             | _ => (),

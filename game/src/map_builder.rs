@@ -1,6 +1,5 @@
 use crate::map::Map;
 use crate::map::TileType;
-use rand::Rng;
 
 pub fn create_map() -> Map {
     const NUM_ROOMS: usize = 10;

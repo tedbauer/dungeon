@@ -1,13 +1,12 @@
+// goal for today: get all screen/drawing functionality behind "screen" trait; no drawing-related SDL imports
+// in game, only engine screen-traits
+// also if time: Load textures once, not on every frame
 extern crate engine;
 extern crate sdl2;
 
 use sdl2::event::Event;
-use sdl2::image::{InitFlag, LoadTexture};
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
+use sdl2::EventPump;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -16,88 +15,52 @@ mod map;
 mod map_builder;
 mod systems;
 
-use crate::component::Component;
-use crate::map_builder::create_map;
 use crate::systems::entity_render::entity_render;
-use crate::systems::map_render::map_render;
 use crate::systems::player_input::process_player_input;
 use components::*;
-use engine::component;
-use engine::world::EntityId;
-use engine::world::View;
+use engine::view::desktop_screen::DesktopScreen;
+use engine::view::view::RgbColor;
+use engine::view::view::Screen;
 use engine::world::World;
 use map::TileType;
-use std::env;
-use std::path::Path;
 
-pub fn main() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+fn start_game_loop(world: &mut World, mut screen: Box<dyn Screen>, mut event_pump: EventPump) {
+    'running: loop {
+        screen.set_draw_color(&RgbColor {
+            red: 255,
+            green: 255,
+            blue: 255,
+        });
+        screen.clear();
+        screen.set_draw_color(&RgbColor {
+            red: 0,
+            green: 0,
+            blue: 0,
+        });
 
-    let window = video_subsystem
-        .window("dungeon", 800, 600)
-        .position_centered()
-        .build()
-        .unwrap();
+        for event in event_pump.poll_iter() {
+            match event {
+                | Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                | Event::KeyDown {
+                    keycode: Some(key), ..
+                } => process_player_input(world, key),
+                | _ => {}
+            }
+        }
 
-    sdl2::image::init(InitFlag::PNG | InitFlag::JPG).unwrap();
+        //map_render(&map, &mut canvas);
+        entity_render(&world, &mut screen);
+        screen.present();
 
-    let mut canvas: Canvas<Window> = window.into_canvas().build().unwrap();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    }
+}
 
-    let width = 400;
-    let height = 400;
-
-    let white = Color::RGB(255, 255, 255);
-    let black = Color::RGB(0, 0, 0);
-
-    canvas.set_draw_color(black);
-
-    let mut world = World::new();
-    world.create_pool::<Player>();
-    world.create_pool::<Enemy>();
-    world.create_pool::<Position>();
-    world.create_pool::<Render>();
-    world.create_pool::<ImageRender>();
-
-    let player = world.create_entity();
-    world.assign(player, Position { x: 4, y: 4 });
-    world.assign(player, Player {});
-    world.assign(
-        player,
-        Render {
-            color: Color::RGB(255, 255, 255),
-        },
-    );
-    world.assign(
-        player,
-        ImageRender {
-            texture: PathBuf::from("game/assets/person.png"),
-            width: 40,
-            height: 60,
-            y_offset: 0,
-        },
-    );
-
-    let enemy1 = world.create_entity();
-    world.assign(enemy1, Position { x: 5, y: 10 });
-    world.assign(enemy1, Enemy {});
-    world.assign(
-        enemy1,
-        Render {
-            color: Color::RGB(255, 0, 0),
-        },
-    );
-
-    let enemy2 = world.create_entity();
-    world.assign(enemy2, Position { x: 100, y: 40 });
-    world.assign(enemy2, Enemy {});
-    world.assign(
-        enemy2,
-        Render {
-            color: Color::RGB(255, 0, 0),
-        },
-    );
-
+fn build_map(world: &mut World) {
     let map = map_builder::create_map();
 
     for (x, row) in map.tiles.iter().enumerate() {
@@ -136,30 +99,86 @@ pub fn main() {
             }
         }
     }
+}
 
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    'running: loop {
-        canvas.set_draw_color(white);
-        canvas.clear();
+fn create_entities(world: &mut World) {
+    let player = world.create_entity();
+    world.assign(player, Position { x: 4, y: 4 });
+    world.assign(player, Player {});
+    world.assign(
+        player,
+        Render {
+            color: RgbColor {
+                red: 255,
+                green: 255,
+                blue: 255,
+            },
+        },
+    );
+    world.assign(
+        player,
+        ImageRender {
+            texture: PathBuf::from("game/assets/person.png"),
+            width: 40,
+            height: 60,
+            y_offset: 0,
+        },
+    );
 
-        for event in event_pump.poll_iter() {
-            match event {
-                | Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'running,
-                | Event::KeyDown {
-                    keycode: Some(key), ..
-                } => process_player_input(&mut world, key),
-                | _ => {}
-            }
-        }
+    let enemy1 = world.create_entity();
+    world.assign(enemy1, Position { x: 5, y: 10 });
+    world.assign(enemy1, Enemy {});
+    world.assign(
+        enemy1,
+        Render {
+            color: RgbColor {
+                red: 255,
+                green: 0,
+                blue: 0,
+            },
+        },
+    );
 
-        //map_render(&map, &mut canvas);
-        entity_render(&world, &mut canvas);
-        canvas.present();
+    let enemy2 = world.create_entity();
+    world.assign(enemy2, Position { x: 100, y: 40 });
+    world.assign(enemy2, Enemy {});
+    world.assign(
+        enemy2,
+        Render {
+            color: RgbColor {
+                red: 255,
+                green: 0,
+                blue: 0,
+            },
+        },
+    );
+}
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-    }
+fn init_world() -> World {
+    let mut world = World::new();
+    world.create_pool::<Player>();
+    world.create_pool::<Enemy>();
+    world.create_pool::<Position>();
+    world.create_pool::<Render>();
+    world.create_pool::<ImageRender>();
+    world
+}
+
+fn run_game(screen: Box<dyn Screen>) {
+    let mut world: World = init_world();
+    create_entities(&mut world);
+    build_map(&mut world);
+
+    let event_pump = screen.get_context().event_pump().unwrap();
+    start_game_loop(&mut world, screen, event_pump)
+}
+
+pub fn main() {
+    let screen = DesktopScreen::builder()
+        .with_title("dungeon")
+        .with_size((800, 600))
+        .build()
+        .unwrap();
+
+    run_game(Box::new(screen));
 }

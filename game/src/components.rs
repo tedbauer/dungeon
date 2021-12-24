@@ -1,11 +1,9 @@
-use sdl2::pixels::Color;
-use sdl2::render::Texture;
-
 extern crate engine;
 use std::path::PathBuf;
 
 use component_derive::Component;
 use engine::component::Component;
+use engine::view::view::RgbColor;
 use std::any::Any;
 use std::any::TypeId;
 
@@ -30,7 +28,7 @@ pub struct Enemy {}
 
 #[derive(Component, Debug)]
 pub struct Render {
-    pub color: Color,
+    pub color: RgbColor,
 }
 
 #[derive(Component, Debug)]

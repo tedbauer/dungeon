@@ -1,4 +1,3 @@
-use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
@@ -8,14 +7,6 @@ use std::path::PathBuf;
 use crate::map::Map;
 use crate::map::TileType;
 use crate::sdl2::image::LoadTexture;
-use crate::ImageRender;
-use crate::Player;
-use crate::Position;
-use crate::Render;
-
-use engine::world::EntityId;
-use engine::world::View;
-use engine::world::World;
 
 fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
     ((x - y) * (40 / 2) + 400, (x + y) * (20 / 2))
