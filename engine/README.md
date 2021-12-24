@@ -1,3 +1,6 @@
 # Engine
 
-A tiny entity-component-system game engine.
+An entity-component-system game engine.
+
+## Reading list
+- https://csherratt.github.io/blog/posts/specs-and-legion/
