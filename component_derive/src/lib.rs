@@ -9,17 +9,17 @@ fn impl_component_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let gen = quote! {
         impl Component for #name {
+            fn as_any_mut(&mut self) -> &mut dyn Any {
+              self
+            }
+
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
             fn type_id(&self) -> TypeId {
                 TypeId::of::<Self>()
             }
-
-                        fn as_any_mut(&mut self) -> &mut dyn Any {
-                                        self
-                        }
-
-                        fn as_any(&self) -> &dyn Any {
-                                self
-                        }
         }
     };
     gen.into()

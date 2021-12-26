@@ -150,3 +150,8 @@ impl<'a, C: ComponentTuple> View<'a, C> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+}
