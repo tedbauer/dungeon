@@ -1,2 +1,5 @@
 target/*
 !target/doc/
+
+component_derive/target
+game/target
