@@ -12,9 +12,9 @@ impl<C: Component> Pool<C> {
     //FIXME: there's a bug with this resizing
     pub fn new() -> Self {
         let mut pool = Vec::<Option<C>>::new();
-        pool.resize_with(500, || None);
+        pool.resize_with(1200, || None);
 
-        Self { pool, size: 500 }
+        Self { pool, size: 1200 }
     }
 
     pub fn add_component(&mut self, entityId: EntityId, component: C) {
