@@ -40,6 +40,8 @@ pub fn create_map() -> Map {
     }
         */
 
-    println!("{:?}", tiles);
+    for row in &tiles {
+        println!("row: {:?}", row);
+    }
     Map { tiles }
 }

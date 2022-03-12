@@ -111,6 +111,7 @@ pub struct View<'a, C: ComponentTuple> {
 impl<'a, C: ComponentTuple> Iterator for View<'a, C> {
     type Item = EntityId;
 
+    // TODO: this is crazy inefficient, use bitmasks or something
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             if self.entity_index == self.world.entity_components.len() {
@@ -152,6 +153,4 @@ impl<'a, C: ComponentTuple> View<'a, C> {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

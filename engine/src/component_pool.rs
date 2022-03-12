@@ -11,9 +11,9 @@ pub struct Pool<C: Component> {
 impl<C: Component> Pool<C> {
     pub fn new() -> Self {
         let mut pool = Vec::<Option<C>>::new();
-        pool.resize_with(50, || None);
+        pool.resize_with(500, || None);
 
-        Self { pool, size: 50 }
+        Self { pool, size: 500 }
     }
 
     pub fn add_component(&mut self, entityId: EntityId, component: C) {

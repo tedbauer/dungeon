@@ -14,16 +14,24 @@ fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
 }
 
 pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
-    for entity in View::<(Position, Render)>::new(world) {
-        let position: &Position = world.get_component::<Position>(entity).unwrap();
-        let render: &Render = world.get_component::<Render>(entity).unwrap();
+    /*
+        for entity in View::<(Position, Render)>::new(world) {
+            let position: &Position = world.get_component::<Position>(entity).unwrap();
+            let render: &Render = world.get_component::<Render>(entity).unwrap();
 
-        screen.set_draw_color(&render.color);
-        screen.draw_rect(Rect::new(position.x, position.y, 50, 50));
-    }
+            screen.set_draw_color(&render.color);
+            screen.draw_rect(Rect::new(position.x, position.y, 50, 50));
+        }
+    */
 
-    let mut image_entities = View::<(Position, ImageRender)>::new(world).collect::<Vec<EntityId>>();
-    image_entities.sort_by(|e1, e2| {
+    // if x is greater, than V is greater
+    // if x is same, but y is greater, than V is greater
+    // if x1 > y1 || (x1 == x1 && y1 > y2)
+    // x1 >= x2
+    let image_entities = View::<(Position, ImageRender)>::new(world).collect::<Vec<EntityId>>();
+
+    let mut image_entities_sorted = image_entities.clone();
+    image_entities_sorted.sort_by(|e1, e2| {
         match (
             world.get_component::<Position>(*e1),
             world.get_component::<Position>(*e2),
@@ -31,19 +39,30 @@ pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
             | (Some(p1), Some(p2)) => {
                 if p1.x == p2.x && p1.y == p2.y {
                     Ordering::Equal
-                } else if p1.x >= p2.x && p1.y >= p2.y {
+                } else if p1.x > p2.x || (p1.x == p2.x && p1.y > p2.y) {
                     Ordering::Greater
                 } else {
                     Ordering::Less
                 }
             }
-
-            | _ => Ordering::Equal,
+            | (None, None) => {
+                println!("None, None for e1 {} and e2 {}", e1, e2);
+                Ordering::Equal
+            }
+            | (Some(a), None) => {
+                println!("Some({:?}), None for e1 {} and e2 {}", a, e1, e2);
+                Ordering::Greater
+            }
+            | (None, Some(b)) => {
+                println!("None, Some({:?}) for e1 {} and e2 {}", b, e1, e2);
+                Ordering::Equal
+            }
         }
     });
+    println!("--");
 
     let texture_creator = screen.texture_creator();
-    for entity in image_entities.iter() {
+    for entity in image_entities_sorted.iter() {
         match (
             world.get_component::<Position>(*entity),
             world.get_component::<ImageRender>(*entity),
@@ -53,17 +72,20 @@ pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
                     .load_texture(render.texture.clone())
                     .unwrap();
 
-                let (x, y) = tile_to_world(position.x, position.y);
-                screen.copy(
-                    &tex,
-                    None,
-                    Some(Rect::new(
-                        x,
-                        y + render.y_offset,
-                        render.width,
-                        render.height,
-                    )),
-                );
+                //if position.y == 0 || position.y == 1 {
+                if true {
+                    let (x, y) = tile_to_world(position.x, position.y);
+                    screen.copy(
+                        &tex,
+                        None,
+                        Some(Rect::new(
+                            x,
+                            y + render.y_offset,
+                            render.width,
+                            render.height,
+                        )),
+                    );
+                }
             }
             | _ => (),
         }

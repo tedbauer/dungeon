@@ -107,16 +107,6 @@ fn create_entities(world: &mut World) {
     world.assign(player, Player {});
     world.assign(
         player,
-        Render {
-            color: RgbColor {
-                red: 255,
-                green: 255,
-                blue: 255,
-            },
-        },
-    );
-    world.assign(
-        player,
         ImageRender {
             texture: PathBuf::from("game/assets/person.png"),
             width: 40,
@@ -125,6 +115,7 @@ fn create_entities(world: &mut World) {
         },
     );
 
+    /*
     let enemy1 = world.create_entity();
     world.assign(enemy1, Position { x: 5, y: 10 });
     world.assign(enemy1, Enemy {});
@@ -152,6 +143,7 @@ fn create_entities(world: &mut World) {
             },
         },
     );
+        */
 }
 
 fn init_world() -> World {
