@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["component",""],["component_pool",""],["view",""],["world",""]]});

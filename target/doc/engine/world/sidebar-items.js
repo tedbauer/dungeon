@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["View","An iterator containing every entity in the `World` that has the components in `C`."],["World",""]],"type":[["ComponentId",""],["EntityId",""]]});
