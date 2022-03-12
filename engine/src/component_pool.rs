@@ -9,6 +9,7 @@ pub struct Pool<C: Component> {
 }
 
 impl<C: Component> Pool<C> {
+    //FIXME: there's a bug with this resizing
     pub fn new() -> Self {
         let mut pool = Vec::<Option<C>>::new();
         pool.resize_with(500, || None);
