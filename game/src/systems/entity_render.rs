@@ -1,4 +1,3 @@
-use crate::sdl2::image::LoadTexture;
 use crate::ImageRender;
 use crate::Position;
 use crate::Render;
@@ -7,13 +6,14 @@ use engine::world::EntityId;
 use engine::world::View;
 use engine::world::World;
 use sdl2::rect::Rect;
+use sdl2::render::Texture;
 use std::cmp::Ordering;
 
 fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
     ((x - y) * (40 / 2) + 400, (x + y) * (20 / 2))
 }
 
-pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
+pub fn entity_render<'a>(world: &World, screen: &mut Box<dyn Screen>, textures: &Vec<Texture<'a>>) {
     /*
         for entity in View::<(Position, Render)>::new(world) {
             let position: &Position = world.get_component::<Position>(entity).unwrap();
@@ -61,22 +61,17 @@ pub fn entity_render(world: &World, screen: &mut Box<dyn Screen>) {
     });
     println!("--");
 
-    let texture_creator = screen.texture_creator();
     for entity in image_entities_sorted.iter() {
         match (
             world.get_component::<Position>(*entity),
             world.get_component::<ImageRender>(*entity),
         ) {
             | (Some(position), Some(render)) => {
-                let tex = texture_creator
-                    .load_texture(render.texture.clone())
-                    .unwrap();
-
                 //if position.y == 0 || position.y == 1 {
                 if true {
                     let (x, y) = tile_to_world(position.x, position.y);
                     screen.copy(
-                        &tex,
+                        &textures.get(render.texture_index).unwrap(),
                         None,
                         Some(Rect::new(
                             x,

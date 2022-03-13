@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use component_derive::Component;
 use engine::component::Component;
 use engine::view::view::RgbColor;
+use sdl2::render::Texture;
 use std::any::Any;
 use std::any::TypeId;
 
@@ -31,9 +32,9 @@ pub struct Render {
     pub color: RgbColor,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component)]
 pub struct ImageRender {
-    pub texture: PathBuf,
+    pub texture_index: usize,
     pub height: u32,
     pub width: u32,
     pub y_offset: i32,

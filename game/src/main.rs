@@ -6,6 +6,7 @@ extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::render::TextureCreator;
 use sdl2::EventPump;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -15,6 +16,7 @@ mod map;
 mod map_builder;
 mod systems;
 
+use crate::sdl2::image::LoadTexture;
 use crate::systems::entity_render::entity_render;
 use crate::systems::player_input::process_player_input;
 use components::*;
@@ -23,8 +25,15 @@ use engine::view::view::RgbColor;
 use engine::view::view::Screen;
 use engine::world::World;
 use map::TileType;
+use sdl2::render::Texture;
+use sdl2::video::WindowContext;
 
-fn start_game_loop(world: &mut World, mut screen: Box<dyn Screen>, mut event_pump: EventPump) {
+fn start_game_loop<'a>(
+    world: &mut World,
+    mut screen: Box<dyn Screen>,
+    mut event_pump: EventPump,
+    textures: Vec<Texture<'a>>,
+) {
     'running: loop {
         screen.set_draw_color(&RgbColor {
             red: 255,
@@ -53,7 +62,7 @@ fn start_game_loop(world: &mut World, mut screen: Box<dyn Screen>, mut event_pum
         }
 
         //map_render(&map, &mut canvas);
-        entity_render(&world, &mut screen);
+        entity_render(&world, &mut screen, &textures);
         screen.present();
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
@@ -78,7 +87,7 @@ fn build_map(world: &mut World) {
                     world.assign(
                         t,
                         ImageRender {
-                            texture: PathBuf::from("game/assets/wall.png"),
+                            texture_index: 0,
                             width: 40,
                             height: 60,
                             y_offset: 0,
@@ -89,7 +98,7 @@ fn build_map(world: &mut World) {
                     world.assign(
                         t,
                         ImageRender {
-                            texture: PathBuf::from("game/assets/floor.png"),
+                            texture_index: 1,
                             width: 40,
                             height: 20,
                             y_offset: 40,
@@ -108,7 +117,7 @@ fn create_entities(world: &mut World) {
     world.assign(
         player,
         ImageRender {
-            texture: PathBuf::from("game/assets/person.png"),
+            texture_index: 2,
             width: 40,
             height: 60,
             y_offset: 0,
@@ -158,11 +167,26 @@ fn init_world() -> World {
 
 fn run_game(screen: Box<dyn Screen>) {
     let mut world: World = init_world();
+    let texture_creator = screen.texture_creator();
+    let wall_tex = texture_creator
+        .load_texture(PathBuf::from("game/assets/wall.png"))
+        .unwrap();
+
+    let floor_tex = texture_creator
+        .load_texture(PathBuf::from("game/assets/wall.png"))
+        .unwrap();
+
+    let person_tex = texture_creator
+        .load_texture(PathBuf::from("game/assets/person.png"))
+        .unwrap();
+
+    let textures = vec![wall_tex, floor_tex, person_tex];
+
     create_entities(&mut world);
     build_map(&mut world);
 
     let event_pump = screen.get_context().event_pump().unwrap();
-    start_game_loop(&mut world, screen, event_pump)
+    start_game_loop(&mut world, screen, event_pump, textures)
 }
 
 pub fn main() {
