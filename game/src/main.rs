@@ -173,7 +173,7 @@ fn run_game(screen: Box<dyn Screen>) {
         .unwrap();
 
     let floor_tex = texture_creator
-        .load_texture(PathBuf::from("game/assets/wall.png"))
+        .load_texture(PathBuf::from("game/assets/floor.png"))
         .unwrap();
 
     let person_tex = texture_creator
