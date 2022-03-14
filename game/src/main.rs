@@ -9,6 +9,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::render::TextureCreator;
 use sdl2::EventPump;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 
 mod components;
@@ -18,6 +19,7 @@ mod systems;
 
 use crate::sdl2::image::LoadTexture;
 use crate::systems::entity_render::entity_render;
+use crate::systems::entity_update::entity_update;
 use crate::systems::player_input::process_player_input;
 use components::*;
 use engine::view::desktop_screen::DesktopScreen;
@@ -62,6 +64,7 @@ fn start_game_loop<'a>(
         }
 
         //map_render(&map, &mut canvas);
+        entity_update(world);
         entity_render(&world, &mut screen, &textures);
         screen.present();
 
@@ -124,35 +127,18 @@ fn create_entities(world: &mut World) {
         },
     );
 
-    /*
-    let enemy1 = world.create_entity();
-    world.assign(enemy1, Position { x: 5, y: 10 });
-    world.assign(enemy1, Enemy {});
+    let enemy = world.create_entity();
+    world.assign(enemy, Position { x: 15, y: 15 });
     world.assign(
-        enemy1,
-        Render {
-            color: RgbColor {
-                red: 255,
-                green: 0,
-                blue: 0,
-            },
+        enemy,
+        ImageRender {
+            texture_index: 2,
+            width: 40,
+            height: 60,
+            y_offset: 0,
         },
     );
-
-    let enemy2 = world.create_entity();
-    world.assign(enemy2, Position { x: 100, y: 40 });
-    world.assign(enemy2, Enemy {});
-    world.assign(
-        enemy2,
-        Render {
-            color: RgbColor {
-                red: 255,
-                green: 0,
-                blue: 0,
-            },
-        },
-    );
-        */
+    world.assign(enemy, RandomWalk {}).unwrap();
 }
 
 fn init_world() -> World {
@@ -162,6 +148,7 @@ fn init_world() -> World {
     world.create_pool::<Position>();
     world.create_pool::<Render>();
     world.create_pool::<ImageRender>();
+    world.create_pool::<RandomWalk>();
     world
 }
 

@@ -2,6 +2,7 @@ use crate::component::Component;
 use crate::component::ComponentTuple;
 use crate::component_pool::ComponentPool;
 use crate::component_pool::Pool;
+use anyhow::{anyhow, Result};
 use std::any::Any;
 use std::any::TypeId;
 use std::collections::HashMap;
@@ -69,8 +70,15 @@ impl World {
         pool.get_component_mut(entity)
     }
 
-    pub fn assign<C: Component>(&mut self, entity: EntityId, component: C) {
-        let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
+    pub fn assign<C: Component>(&mut self, entity: EntityId, component: C) -> Result<()> {
+        let component_id = self
+            .component_ids
+            .get(&TypeId::of::<C>())
+            .ok_or(anyhow!(format!(
+                "no pool for component {:?} exists",
+                TypeId::of::<C>()
+            )))?;
+
         let mut pool = self
             .pools
             .get_mut(*component_id)
@@ -90,6 +98,8 @@ impl World {
             new_set.insert(*self.component_ids.get(&TypeId::of::<C>()).unwrap());
             self.entity_components.insert(entity, new_set);
         }
+
+        Ok(())
     }
 }
 

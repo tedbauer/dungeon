@@ -24,6 +24,9 @@ impl Position {
 #[derive(Component, Debug, Clone)]
 pub struct Player {}
 
+#[derive(Component, Debug, Clone)]
+pub struct RandomWalk {}
+
 #[derive(Component, Debug)]
 pub struct Enemy {}
 

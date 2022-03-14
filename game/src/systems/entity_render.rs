@@ -14,20 +14,6 @@ fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
 }
 
 pub fn entity_render<'a>(world: &World, screen: &mut Box<dyn Screen>, textures: &Vec<Texture<'a>>) {
-    /*
-        for entity in View::<(Position, Render)>::new(world) {
-            let position: &Position = world.get_component::<Position>(entity).unwrap();
-            let render: &Render = world.get_component::<Render>(entity).unwrap();
-
-            screen.set_draw_color(&render.color);
-            screen.draw_rect(Rect::new(position.x, position.y, 50, 50));
-        }
-    */
-
-    // if x is greater, than V is greater
-    // if x is same, but y is greater, than V is greater
-    // if x1 > y1 || (x1 == x1 && y1 > y2)
-    // x1 >= x2
     let image_entities = View::<(Position, ImageRender)>::new(world).collect::<Vec<EntityId>>();
 
     let mut image_entities_sorted = image_entities.clone();
@@ -59,7 +45,6 @@ pub fn entity_render<'a>(world: &World, screen: &mut Box<dyn Screen>, textures: 
             }
         }
     });
-    println!("--");
 
     for entity in image_entities_sorted.iter() {
         match (
@@ -67,24 +52,19 @@ pub fn entity_render<'a>(world: &World, screen: &mut Box<dyn Screen>, textures: 
             world.get_component::<ImageRender>(*entity),
         ) {
             | (Some(position), Some(render)) => {
-                //if position.y == 0 || position.y == 1 {
-                if true {
-                    let (x, y) = tile_to_world(position.x, position.y);
-                    screen.copy(
-                        &textures.get(render.texture_index).unwrap(),
-                        None,
-                        Some(Rect::new(
-                            x,
-                            y + render.y_offset,
-                            render.width,
-                            render.height,
-                        )),
-                    );
-                }
+                let (x, y) = tile_to_world(position.x, position.y);
+                screen.copy(
+                    &textures.get(render.texture_index).unwrap(),
+                    None,
+                    Some(Rect::new(
+                        x,
+                        y + render.y_offset,
+                        render.width,
+                        render.height,
+                    )),
+                );
             }
             | _ => (),
         }
-        //let position: &Position = world.get_component::<Position>(entity).unwrap();
-        //let render: &ImageRender = world.get_component::<ImageRender>(entity).unwrap();
     }
 }
