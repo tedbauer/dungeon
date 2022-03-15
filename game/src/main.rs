@@ -11,6 +11,7 @@ use sdl2::EventPump;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use systems::entity_render::Renderer;
 
 mod components;
 mod map;
@@ -18,7 +19,6 @@ mod map_builder;
 mod systems;
 
 use crate::sdl2::image::LoadTexture;
-use crate::systems::entity_render::entity_render;
 use crate::systems::entity_update::entity_update;
 use crate::systems::player_input::process_player_input;
 use components::*;
@@ -34,6 +34,7 @@ fn start_game_loop<'a>(
     world: &mut World,
     mut screen: Box<dyn Screen>,
     mut event_pump: EventPump,
+    mut render_system: Renderer,
     textures: Vec<Texture<'a>>,
 ) {
     'running: loop {
@@ -65,7 +66,7 @@ fn start_game_loop<'a>(
 
         //map_render(&map, &mut canvas);
         entity_update(world);
-        entity_render(&world, &mut screen, &textures);
+        render_system.tick(&world, &mut screen, &textures);
         screen.present();
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
@@ -154,6 +155,8 @@ fn init_world() -> World {
 
 fn run_game(screen: Box<dyn Screen>) {
     let mut world: World = init_world();
+    //world.register_system(Renderer {camera_x: 0, camera_y: 0});
+
     let texture_creator = screen.texture_creator();
     let wall_tex = texture_creator
         .load_texture(PathBuf::from("game/assets/wall.png"))
@@ -173,7 +176,11 @@ fn run_game(screen: Box<dyn Screen>) {
     build_map(&mut world);
 
     let event_pump = screen.get_context().event_pump().unwrap();
-    start_game_loop(&mut world, screen, event_pump, textures)
+    let renderer = Renderer {
+        camera_x: 0,
+        camera_y: 0,
+    };
+    start_game_loop(&mut world, screen, event_pump, renderer, textures)
 }
 
 pub fn main() {
