@@ -3,7 +3,6 @@ use crate::component::ComponentTuple;
 use crate::component_pool::ComponentPool;
 use crate::component_pool::Pool;
 use anyhow::{anyhow, Result};
-use std::any::Any;
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -46,46 +45,46 @@ impl World {
         new_entity
     }
 
-    pub fn get_component<C: Component>(&self, entity: EntityId) -> Option<&C> {
+    pub fn get_component<C: Component>(&self, entity: EntityId) -> Result<Option<&C>> {
         let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
         let pool = self
             .pools
             .get(*component_id)
-            .unwrap()
+            .ok_or(anyhow!(
+                "no pool for component '{:?}' exists",
+                TypeId::of::<C>()
+            ))?
             .as_any()
             .downcast_ref::<Pool<C>>()
-            .unwrap();
+            .ok_or(anyhow!("downcast to Pool<{:?}> failed", TypeId::of::<C>()))?;
         pool.get_component(entity)
     }
 
-    pub fn get_component_mut<C: Component>(&mut self, entity: EntityId) -> Option<&mut C> {
+    pub fn get_component_mut<C: Component>(&mut self, entity: EntityId) -> Result<Option<&mut C>> {
         let component_id = self.component_ids.get(&TypeId::of::<C>()).unwrap();
         let pool = self
             .pools
             .get_mut(*component_id)
-            .unwrap()
+            .ok_or(anyhow!("no pool for component '{:?}' exists", TypeId::of::<C>()))?
             .as_any_mut()
             .downcast_mut::<Pool<C>>()
-            .unwrap();
+            .ok_or(anyhow!("downcast to Pool<{:?}> failed", TypeId::of::<C>()))?;
         pool.get_component_mut(entity)
     }
 
     pub fn assign<C: Component>(&mut self, entity: EntityId, component: C) -> Result<()> {
-        let component_id = self
-            .component_ids
-            .get(&TypeId::of::<C>())
-            .ok_or(anyhow!(format!(
-                "no pool for component {:?} exists",
-                TypeId::of::<C>()
-            )))?;
+        let component_id = self.component_ids.get(&TypeId::of::<C>()).ok_or(anyhow!(
+            "no pool for component {:?} exists",
+            TypeId::of::<C>()
+        ))?;
 
         let mut pool = self
             .pools
             .get_mut(*component_id)
-            .unwrap()
+            .ok_or(anyhow!("no pool for component '{:?}' exists", TypeId::of::<C>()))?
             .as_any_mut()
             .downcast_mut::<Pool<C>>()
-            .unwrap();
+            .ok_or(anyhow!("downcast to Pool<{:?}> failed", TypeId::of::<C>()))?;
         pool.add_component(entity, component);
 
         if self.entity_components.contains_key(&entity) {

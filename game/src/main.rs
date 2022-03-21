@@ -1,23 +1,15 @@
-// goal for today: get all screen/drawing functionality behind "screen" trait; no drawing-related SDL imports
-// in game, only engine screen-traits
-// also if time: Load textures once, not on every frame
 extern crate engine;
 extern crate sdl2;
-
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::render::TextureCreator;
 use sdl2::EventPump;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Duration;
 use systems::entity_render::Renderer;
-
 mod components;
 mod map;
 mod map_builder;
 mod systems;
-
 use crate::sdl2::image::LoadTexture;
 use crate::systems::entity_update::entity_update;
 use crate::systems::player_input::process_player_input;
@@ -28,7 +20,6 @@ use engine::view::view::Screen;
 use engine::world::World;
 use map::TileType;
 use sdl2::render::Texture;
-use sdl2::video::WindowContext;
 
 fn start_game_loop<'a>(
     world: &mut World,

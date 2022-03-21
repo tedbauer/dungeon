@@ -27,7 +27,7 @@ impl Renderer {
         textures: &Vec<Texture<'a>>,
     ) {
         for entity in View::<(Player, Position)>::new(world) {
-            if let Some(pos) = world.get_component::<Position>(entity) {
+            if let Some(pos) = world.get_component::<Position>(entity).unwrap() {
                 let coords = tile_to_world(pos.x, pos.y);
                 self.camera_x = -1 * coords.0 + 350;
                 self.camera_y = -1 * coords.1 + 250;
@@ -39,8 +39,8 @@ impl Renderer {
         let mut image_entities_sorted = image_entities.clone();
         image_entities_sorted.sort_by(|e1, e2| {
             match (
-                world.get_component::<Position>(*e1),
-                world.get_component::<Position>(*e2),
+                world.get_component::<Position>(*e1).unwrap(),
+                world.get_component::<Position>(*e2).unwrap(),
             ) {
                 | (Some(p1), Some(p2)) => {
                     if p1.x == p2.x && p1.y == p2.y {
@@ -68,8 +68,8 @@ impl Renderer {
 
         for entity in image_entities_sorted.iter() {
             match (
-                world.get_component::<Position>(*entity),
-                world.get_component::<ImageRender>(*entity),
+                world.get_component::<Position>(*entity).unwrap(),
+                world.get_component::<ImageRender>(*entity).unwrap(),
             ) {
                 | (Some(position), Some(render)) => {
                     let (x, y) = tile_to_world(position.x, position.y);
