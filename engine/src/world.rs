@@ -65,7 +65,10 @@ impl World {
         let pool = self
             .pools
             .get_mut(*component_id)
-            .ok_or(anyhow!("no pool for component '{:?}' exists", TypeId::of::<C>()))?
+            .ok_or(anyhow!(
+                "no pool for component '{:?}' exists",
+                TypeId::of::<C>()
+            ))?
             .as_any_mut()
             .downcast_mut::<Pool<C>>()
             .ok_or(anyhow!("downcast to Pool<{:?}> failed", TypeId::of::<C>()))?;
@@ -81,7 +84,10 @@ impl World {
         let mut pool = self
             .pools
             .get_mut(*component_id)
-            .ok_or(anyhow!("no pool for component '{:?}' exists", TypeId::of::<C>()))?
+            .ok_or(anyhow!(
+                "no pool for component '{:?}' exists",
+                TypeId::of::<C>()
+            ))?
             .as_any_mut()
             .downcast_mut::<Pool<C>>()
             .ok_or(anyhow!("downcast to Pool<{:?}> failed", TypeId::of::<C>()))?;

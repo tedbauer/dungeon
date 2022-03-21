@@ -21,7 +21,10 @@ pub fn entity_update(world: &mut World) {
                 .unwrap(),
         };
 
-        let position: &mut Position = world.get_component_mut::<Position>(entity).unwrap().unwrap();
+        let position: &mut Position = world
+            .get_component_mut::<Position>(entity)
+            .unwrap()
+            .unwrap();
         position.add(&delta);
     }
 }

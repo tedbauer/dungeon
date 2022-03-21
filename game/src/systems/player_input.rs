@@ -17,7 +17,10 @@ pub fn process_player_input(world: &mut World, keycode: Keycode) {
     };
 
     for entity in View::<(Player, Position)>::new(world).collect::<Vec<EntityId>>() {
-        let position: &mut Position = world.get_component_mut::<Position>(entity).unwrap().unwrap();
+        let position: &mut Position = world
+            .get_component_mut::<Position>(entity)
+            .unwrap()
+            .unwrap();
         position.add(&delta);
         println!("player position: {}, {}", position.x, position.y);
     }
