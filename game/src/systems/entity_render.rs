@@ -10,13 +10,29 @@ use sdl2::rect::Rect;
 use sdl2::render::Texture;
 use std::cmp::Ordering;
 
+pub struct LerpingState {
+    a: (f64, f64),
+    b: (f64, f64),
+    t: f64,
+}
+
+pub enum LerpState {
+    Lerping(LerpingState),
+    Paused((f64, f64)),
+}
+
 pub struct Renderer {
-    pub camera_x: i32,
-    pub camera_y: i32,
+    pub camera_x: f64,
+    pub camera_y: f64,
+    pub lerp_state: LerpState,
 }
 
 fn tile_to_world(x: i32, y: i32) -> (i32, i32) {
     ((x - y) * (40 / 2) + 400, (x + y) * (20 / 2))
+}
+
+fn lerp(a: f64, b: f64, t: f64) -> f64 {
+    a + (b - a) * t * 1.5
 }
 
 impl Renderer {
@@ -25,15 +41,35 @@ impl Renderer {
         world: &World,
         screen: &mut Box<dyn Screen>,
         textures: &Vec<Texture<'a>>,
+        delta: f64,
     ) {
         for entity in View::<(Player, Position)>::new(world) {
             if let Some(pos) = world.get_component::<Position>(entity).unwrap() {
                 let coords = tile_to_world(pos.x, pos.y);
-                self.camera_x = -1 * coords.0 + 350;
-                self.camera_y = -1 * coords.1 + 250;
+                match self.lerp_state {
+                    | LerpState::Paused((x, y)) => {
+                        self.lerp_state = LerpState::Lerping(LerpingState {
+                            a: (x, y),
+                            b: ((-1 * coords.0 + 350) as f64, (-1 * coords.1 + 250) as f64),
+                            t: 0.0,
+                        })
+                    }
+                    | LerpState::Lerping(LerpingState { a, b, t }) => {
+                        let new_t = t + delta;
+                        if new_t >= 1.0 {
+                            self.lerp_state = LerpState::Paused((self.camera_x, self.camera_y));
+                        } else {
+                            self.camera_x = lerp(a.0, b.0, new_t);
+                            self.camera_y = lerp(a.1, b.1, new_t);
+
+                            self.lerp_state = LerpState::Lerping(LerpingState { a, b, t: new_t });
+                        }
+                    }
+                }
+                //self.camera_x = -1 * coords.0 + 350;
+                //self.camera_y = -1 * coords.1 + 250;
             }
         }
-        self.camera_x += 1;
         let image_entities = View::<(Position, ImageRender)>::new(world).collect::<Vec<EntityId>>();
 
         let mut image_entities_sorted = image_entities.clone();
@@ -77,8 +113,8 @@ impl Renderer {
                         &textures.get(render.texture_index).unwrap(),
                         None,
                         Some(Rect::new(
-                            x + self.camera_x,
-                            y + render.y_offset + self.camera_y,
+                            ((x as f64) + self.camera_x) as i32,
+                            ((y + render.y_offset) as f64 + self.camera_y) as i32,
                             render.width,
                             render.height,
                         )),

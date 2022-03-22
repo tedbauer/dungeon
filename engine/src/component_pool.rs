@@ -23,7 +23,7 @@ impl<C: Component> Pool<C> {
 
     pub fn add_component(&mut self, entity_id: EntityId, component: C) -> anyhow::Result<()> {
         if entity_id >= self.size {
-            self.size = self.size * 2;
+            self.size = entity_id * 2;
             self.pool.resize_with(self.size, || None);
         }
 

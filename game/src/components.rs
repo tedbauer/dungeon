@@ -1,10 +1,8 @@
 extern crate engine;
-use std::path::PathBuf;
 
 use component_derive::Component;
 use engine::component::Component;
 use engine::view::view::RgbColor;
-use sdl2::render::Texture;
 use std::any::Any;
 use std::any::TypeId;
 

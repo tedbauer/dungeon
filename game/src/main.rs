@@ -5,12 +5,14 @@ use sdl2::keyboard::Keycode;
 use sdl2::EventPump;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::time::SystemTime;
 use systems::entity_render::Renderer;
 mod components;
 mod map;
 mod map_builder;
 mod systems;
 use crate::sdl2::image::LoadTexture;
+use crate::systems::entity_render::LerpState;
 use crate::systems::entity_update::entity_update;
 use crate::systems::player_input::process_player_input;
 use components::*;
@@ -28,6 +30,7 @@ fn start_game_loop<'a>(
     mut render_system: Renderer,
     textures: Vec<Texture<'a>>,
 ) {
+    let mut time_a = SystemTime::now();
     'running: loop {
         screen.set_draw_color(&RgbColor {
             red: 255,
@@ -55,9 +58,13 @@ fn start_game_loop<'a>(
             }
         }
 
+        let now = SystemTime::now();
+        let delta = now.duration_since(time_a).unwrap().as_secs_f64();
+        time_a = now;
+
         //map_render(&map, &mut canvas);
         entity_update(world);
-        render_system.tick(&world, &mut screen, &textures);
+        render_system.tick(&world, &mut screen, &textures, delta);
         screen.present();
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
@@ -168,8 +175,9 @@ fn run_game(screen: Box<dyn Screen>) {
 
     let event_pump = screen.get_context().event_pump().unwrap();
     let renderer = Renderer {
-        camera_x: 0,
-        camera_y: 0,
+        camera_x: 0.0,
+        camera_y: 0.0,
+        lerp_state: LerpState::Paused((0.0, 0.0)),
     };
     start_game_loop(&mut world, screen, event_pump, renderer, textures)
 }
